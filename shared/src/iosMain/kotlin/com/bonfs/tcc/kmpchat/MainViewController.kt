@@ -1,0 +1,5 @@
+package com.bonfs.tcc.kmpchat
+
+import androidx.compose.ui.window.ComposeUIViewController
+
+fun MainViewController() = ComposeUIViewController { App() }
