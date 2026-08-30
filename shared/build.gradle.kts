@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -42,11 +43,24 @@ kotlin {
     }
     
     sourceSets {
-        androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
-        }
         commonMain.dependencies {
+            implementation(project.dependencies.platform(libs.trixnity.bom))
+            implementation(libs.trixnity.client)
+            implementation(libs.trixnity.client.cryptodriver.vodozemac)
+            implementation(libs.trixnity.client.media.okio)
+            implementation(libs.trixnity.clientserverapi.client)
+            implementation(libs.lognity.core)
+            implementation(libs.okio)
+
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.navigation.compose)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.ktor.client.core)
+
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -56,8 +70,28 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
         }
+        androidMain.dependencies {
+            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.compose.uiTooling)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.trixnity.client.repository.room)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+            implementation(libs.trixnity.client.repository.room)
+            implementation(libs.sqlitenity.bundled)
+            implementation(libs.sqlitenity.compat)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.java)
+            implementation(libs.trixnity.client.repository.room)
+            implementation(libs.sqlitenity.bundled)
+            implementation(libs.sqlitenity.compat)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.koin.test)
         }
     }
 }
