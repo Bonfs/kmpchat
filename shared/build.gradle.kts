@@ -60,6 +60,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.core)
+            implementation(libs.sqlitenity.bundled)
+            implementation(libs.sqlitenity.compat)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -75,6 +77,8 @@ kotlin {
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.trixnity.client.repository.room)
+            implementation(libs.sqlitenity.bundled)
+            implementation(libs.sqlitenity.compat)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
