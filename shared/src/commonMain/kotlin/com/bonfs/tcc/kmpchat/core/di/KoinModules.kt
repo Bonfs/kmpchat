@@ -5,6 +5,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 
+import com.bonfs.tcc.kmpchat.core.util.DefaultLogger
+import com.bonfs.tcc.kmpchat.core.util.Logger
 import com.bonfs.tcc.kmpchat.data.client.MatrixClientManager
 import com.bonfs.tcc.kmpchat.data.local.DatabaseKeyProvider
 import com.bonfs.tcc.kmpchat.data.local.RoomDatabaseFactory
@@ -25,7 +27,8 @@ import com.bonfs.tcc.kmpchat.ui.screens.chat.ChatViewModel
 import com.bonfs.tcc.kmpchat.ui.screens.login.LoginViewModel
 import com.bonfs.tcc.kmpchat.ui.screens.roomlist.RoomListViewModel
 
-val appModule: Module = module {
+val coreModule: Module = module {
+    single<Logger> { DefaultLogger() }
 }
 
 val domainModule: Module = module {
@@ -48,13 +51,13 @@ val dataModule: Module = module {
 }
 
 val viewModelsModule: Module = module {
-    factory { LoginViewModel(get()) }
+    factory { LoginViewModel(get(), get()) }
     factory { RoomListViewModel(get(), get(), get(), get()) }
     factory { ChatViewModel(get(), get()) }
 }
 
 val appModules: List<Module> = listOf(
-    appModule,
+    coreModule,
     domainModule,
     dataModule,
     viewModelsModule

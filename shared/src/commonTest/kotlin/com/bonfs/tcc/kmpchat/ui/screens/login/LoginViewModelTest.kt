@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 
+import com.bonfs.tcc.kmpchat.core.util.Logger
 import com.bonfs.tcc.kmpchat.domain.model.InvalidCredentialsException
 import com.bonfs.tcc.kmpchat.domain.model.LoginCredentials
 import com.bonfs.tcc.kmpchat.domain.model.UserSession
@@ -24,6 +25,12 @@ import com.bonfs.tcc.kmpchat.domain.usecase.LoginUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
+
+    private class FakeLogger : Logger {
+        override fun logInfo(tag: String?, throwable: Throwable?, message: () -> String) {}
+        override fun logWarn(tag: String?, throwable: Throwable?, message: () -> String) {}
+        override fun logError(tag: String?, throwable: Throwable?, message: () -> String) {}
+    }
 
     private class FakeAuthRepo(
         private val shouldFail: Boolean = false
@@ -54,7 +61,7 @@ class LoginViewModelTest {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepo()))
+        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepo()), FakeLogger())
 
         viewModel.sendIntent(LoginUiIntent.HomeserverChanged("https://custom.matrix.org"))
         viewModel.sendIntent(LoginUiIntent.UsernameChanged("alice"))
@@ -74,7 +81,7 @@ class LoginViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         val fakeRepo = FakeAuthRepo(shouldFail = false)
-        val viewModel = LoginViewModel(LoginUseCase(fakeRepo))
+        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), FakeLogger())
 
         viewModel.sendIntent(LoginUiIntent.UsernameChanged("alice"))
         viewModel.sendIntent(LoginUiIntent.PasswordChanged("secret"))
@@ -95,7 +102,7 @@ class LoginViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         val fakeRepo = FakeAuthRepo(shouldFail = true)
-        val viewModel = LoginViewModel(LoginUseCase(fakeRepo))
+        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), FakeLogger())
 
         viewModel.sendIntent(LoginUiIntent.UsernameChanged("alice"))
         viewModel.sendIntent(LoginUiIntent.PasswordChanged("wrong"))

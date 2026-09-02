@@ -1,19 +1,20 @@
 package com.bonfs.tcc.kmpchat.ui.screens.login
 
 import androidx.lifecycle.viewModelScope
-import co.touchlab.kermit.Logger
 import kotlinx.coroutines.launch
 
 import com.bonfs.tcc.kmpchat.core.mvi.BaseViewModel
+import com.bonfs.tcc.kmpchat.core.util.Logger
 import com.bonfs.tcc.kmpchat.domain.model.LoginCredentials
 import com.bonfs.tcc.kmpchat.domain.model.MatrixAuthException
 import com.bonfs.tcc.kmpchat.domain.usecase.LoginUseCase
 
 class LoginViewModel(
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val logger: Logger
 ) : BaseViewModel<LoginUiState, LoginUiIntent, LoginUiEffect>(LoginUiState()) {
 
-    private val logger = Logger.withTag("LoginViewModel")
+    private val TAG = "LoginViewModel"
 
     override fun sendIntent(intent: LoginUiIntent) {
         when (intent) {
@@ -56,10 +57,10 @@ class LoginViewModel(
                 updateState { it.copy(isLoading = false) }
                 emitEffect(LoginUiEffect.NavigateToRooms)
             } catch (exception: MatrixAuthException) {
-                logger.w(exception) { "Matrix authentication failed" }
+                logger.logWarn(TAG, exception) { "Matrix authentication failed" }
                 handleLoginError(exception.message ?: "Falha na autenticação")
             } catch (exception: Exception) {
-                logger.e(exception) { "Unexpected error during login" }
+                logger.logWarn(TAG, exception) { "Unexpected error during login" }
                 handleLoginError("Erro inesperado ao conectar ao servidor")
             }
         }
