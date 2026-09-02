@@ -14,8 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import okio.FileSystem
-import okio.Path.Companion.toPath
 
 import com.bonfs.tcc.kmpchat.data.local.DatabaseKeyProvider
 import com.bonfs.tcc.kmpchat.data.local.RoomDatabaseFactory
@@ -48,25 +46,45 @@ class MatrixClientManager(
         val mediaStore = databaseFactory.createMediaStoreModule(mediaDirectory)
         val cryptoDriver = CryptoDriverModule.vodozemac()
 
-        val clientResult = if (authProviderData != null) {
-            MatrixClient.create(
-                repositoriesModule = repositories,
-                mediaStoreModule = mediaStore,
-                cryptoDriverModule = cryptoDriver,
-                authProviderData = authProviderData
-            )
-        } else {
-            MatrixClient.create(
-                repositoriesModule = repositories,
-                mediaStoreModule = mediaStore,
-                cryptoDriverModule = cryptoDriver
-            )
+        val clientResult = createClientInstance(repositories, mediaStore, cryptoDriver, authProviderData)
+        val client = clientResult.getOrElse { error ->
+            if (authProviderData != null && error is IllegalArgumentException) {
+                recoverFromStaleSession(databaseDirectory, mediaDirectory, keyAlias, authProviderData)
+            } else {
+                throw error
+            }
         }
 
-        val client = clientResult.getOrThrow()
         internalClient.value = client
         observeClientSyncState(client)
         return client
+    }
+
+    private suspend fun recoverFromStaleSession(
+        databaseDirectory: String,
+        mediaDirectory: String,
+        keyAlias: String,
+        authData: MatrixClientAuthProviderData
+    ): MatrixClient {
+        databaseFactory.deleteStorage(databaseDirectory, mediaDirectory)
+        val freshPassphrase = keyProvider.getOrCreatePassphrase(keyAlias)
+        val freshRepos = databaseFactory.createRepositoriesModule(databaseDirectory, freshPassphrase)
+        val freshMediaStore = databaseFactory.createMediaStoreModule(mediaDirectory)
+        val cryptoDriver = CryptoDriverModule.vodozemac()
+        return createClientInstance(freshRepos, freshMediaStore, cryptoDriver, authData).getOrThrow()
+    }
+
+    private suspend fun createClientInstance(
+        repositories: de.connect2x.trixnity.client.RepositoriesModule,
+        mediaStore: de.connect2x.trixnity.client.MediaStoreModule,
+        crypto: CryptoDriverModule,
+        authData: MatrixClientAuthProviderData?
+    ): Result<MatrixClient> {
+        return if (authData != null) {
+            MatrixClient.create(repositories, mediaStore, crypto, authProviderData = authData)
+        } else {
+            MatrixClient.create(repositories, mediaStore, crypto)
+        }
     }
 
     fun startSync() {
@@ -97,8 +115,7 @@ class MatrixClientManager(
     ) {
         closeClient()
         keyProvider.clearKey(keyAlias)
-        deleteDirectory(databaseDirectory)
-        deleteDirectory(mediaDirectory)
+        databaseFactory.deleteStorage(databaseDirectory, mediaDirectory)
     }
 
     private fun observeClientSyncState(client: MatrixClient) {
@@ -106,17 +123,6 @@ class MatrixClientManager(
             client.syncState.collectLatest { state ->
                 internalSyncState.value = state
             }
-        }
-    }
-
-    private fun deleteDirectory(pathString: String) {
-        val path = pathString.toPath()
-        try {
-            if (FileSystem.SYSTEM.exists(path)) {
-                FileSystem.SYSTEM.deleteRecursively(path)
-            }
-        } catch (_: Exception) {
-            // Best effort directory cleanup on wipe
         }
     }
 }

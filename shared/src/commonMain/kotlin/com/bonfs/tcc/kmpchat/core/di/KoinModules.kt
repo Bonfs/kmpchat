@@ -21,6 +21,9 @@ import com.bonfs.tcc.kmpchat.domain.usecase.LogoutUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveRoomsUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveTimelineUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.SendMessageUseCase
+import com.bonfs.tcc.kmpchat.ui.screens.chat.ChatViewModel
+import com.bonfs.tcc.kmpchat.ui.screens.login.LoginViewModel
+import com.bonfs.tcc.kmpchat.ui.screens.roomlist.RoomListViewModel
 
 val appModule: Module = module {
 }
@@ -45,6 +48,9 @@ val dataModule: Module = module {
 }
 
 val viewModelsModule: Module = module {
+    factory { LoginViewModel(get()) }
+    factory { RoomListViewModel(get(), get(), get(), get()) }
+    factory { ChatViewModel(get(), get()) }
 }
 
 val appModules: List<Module> = listOf(

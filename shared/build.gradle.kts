@@ -49,7 +49,7 @@ kotlin {
             implementation(libs.trixnity.client.cryptodriver.vodozemac)
             implementation(libs.trixnity.client.media.okio)
             implementation(libs.trixnity.clientserverapi.client)
-            implementation(libs.lognity.core)
+            implementation(libs.kermit)
             implementation(libs.okio)
 
             implementation(libs.koin.core)
@@ -59,6 +59,7 @@ kotlin {
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.ktor.client.core)
             implementation(libs.sqlitenity.bundled)
             implementation(libs.sqlitenity.compat)

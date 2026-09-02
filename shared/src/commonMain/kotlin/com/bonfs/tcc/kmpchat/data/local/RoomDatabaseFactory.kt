@@ -12,4 +12,9 @@ expect class RoomDatabaseFactory() {
     suspend fun createMediaStoreModule(
         mediaDirectory: String
     ): MediaStoreModule
+
+    fun deleteStorage(
+        databaseDirectory: String,
+        mediaDirectory: String
+    )
 }

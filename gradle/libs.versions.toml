@@ -14,13 +14,14 @@ junit = "4.13.2"
 kotlin = "2.4.10"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.8.0"
+kotlinx-datetime = "0.6.2"
 koin = "4.0.2"
 ktor = "3.1.1"
 material3 = "1.11.0-alpha07"
 navigation = "2.9.0"
 okio = "3.10.2"
 trixnity = "5.8.0"
-lognity = "1.4.2"
+kermit = "2.0.5"
 sqlitenity = "0.0.6"
 
 [libraries]
@@ -45,6 +46,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 # Koin
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
@@ -64,7 +66,7 @@ trixnity-client-media-okio = { module = "de.connect2x.trixnity:trixnity-client-m
 trixnity-clientserverapi-client = { module = "de.connect2x.trixnity:trixnity-clientserverapi-client" }
 
 # Logging & Storage support
-lognity-core = { module = "de.connect2x.lognity:lognity-core", version.ref = "lognity" }
+kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 sqlitenity-bundled = { module = "de.connect2x.sqlitenity:sqlitenity-bundled", version.ref = "sqlitenity" }
 sqlitenity-compat = { module = "de.connect2x.sqlitenity:sqlitenity-compat", version.ref = "sqlitenity" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
