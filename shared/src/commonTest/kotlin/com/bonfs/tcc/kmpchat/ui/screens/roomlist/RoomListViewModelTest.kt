@@ -49,6 +49,7 @@ class RoomListViewModelTest {
     private class FakeAuthRepo : AuthRepository {
         var logoutCalled = false
         override fun observeSession(): Flow<UserSession?> = flowOf(null)
+        override suspend fun restoreSession(): UserSession? = null
         override suspend fun getCurrentSession(): UserSession? = null
         override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.STOPPED)
         override suspend fun login(credentials: LoginCredentials): UserSession = throw UnsupportedOperationException()

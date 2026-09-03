@@ -20,7 +20,7 @@ private const val DATABASE_DIR_NAME = "matrix_data"
 private const val MEDIA_DIR_NAME = "matrix_media"
 private const val KEY_ALIAS_DATABASE = "matrix_db_master_key"
 
-class MatrixAuthRepositoryImpl(
+class MatrixAuthRepository(
     private val clientManager: MatrixClientManager,
     private val basePath: String = "data"
 ) : AuthRepository {
@@ -44,6 +44,30 @@ class MatrixAuthRepositoryImpl(
         internalSession.value = session
         clientManager.startSync()
         return session
+    }
+
+    override suspend fun restoreSession(): UserSession? {
+        if (clientManager.currentClient != null) {
+            return getCurrentSession()
+        }
+        return try {
+            val client = clientManager.initializeClient(
+                databaseDirectory = "$basePath/$DATABASE_DIR_NAME",
+                mediaDirectory = "$basePath/$MEDIA_DIR_NAME",
+                keyAlias = KEY_ALIAS_DATABASE,
+                authProviderData = null
+            )
+            val session = UserSession(
+                userId = client.userId.full,
+                deviceId = client.deviceId,
+                homeserverUrl = client.baseUrl.toString()
+            )
+            internalSession.value = session
+            clientManager.startSync()
+            session
+        } catch (_: Exception) {
+            null
+        }
     }
 
     override suspend fun logout() {

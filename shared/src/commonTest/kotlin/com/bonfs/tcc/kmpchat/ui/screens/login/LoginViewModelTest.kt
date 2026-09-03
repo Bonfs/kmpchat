@@ -22,6 +22,7 @@ import com.bonfs.tcc.kmpchat.domain.model.LoginCredentials
 import com.bonfs.tcc.kmpchat.domain.model.UserSession
 import com.bonfs.tcc.kmpchat.domain.repository.AuthRepository
 import com.bonfs.tcc.kmpchat.domain.usecase.LoginUseCase
+import com.bonfs.tcc.kmpchat.domain.usecase.RestoreSessionUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
@@ -33,13 +34,20 @@ class LoginViewModelTest {
     }
 
     private class FakeAuthRepo(
-        private val shouldFail: Boolean = false
+        private val shouldFail: Boolean = false,
+        private val existingSession: UserSession? = null
     ) : AuthRepository {
         var loginCalled = false
+        var restoreCalled = false
 
-        override fun observeSession(): Flow<UserSession?> = flowOf(null)
-        override suspend fun getCurrentSession(): UserSession? = null
+        override fun observeSession(): Flow<UserSession?> = flowOf(existingSession)
+        override suspend fun getCurrentSession(): UserSession? = existingSession
         override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.STOPPED)
+
+        override suspend fun restoreSession(): UserSession? {
+            restoreCalled = true
+            return existingSession
+        }
 
         override suspend fun login(credentials: LoginCredentials): UserSession {
             loginCalled = true
@@ -61,7 +69,8 @@ class LoginViewModelTest {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepo()), FakeLogger())
+        val fakeRepo = FakeAuthRepo()
+        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), RestoreSessionUseCase(fakeRepo), FakeLogger())
 
         viewModel.sendIntent(LoginUiIntent.HomeserverChanged("https://custom.matrix.org"))
         viewModel.sendIntent(LoginUiIntent.UsernameChanged("alice"))
@@ -81,7 +90,7 @@ class LoginViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         val fakeRepo = FakeAuthRepo(shouldFail = false)
-        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), FakeLogger())
+        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), RestoreSessionUseCase(fakeRepo), FakeLogger())
 
         viewModel.sendIntent(LoginUiIntent.UsernameChanged("alice"))
         viewModel.sendIntent(LoginUiIntent.PasswordChanged("secret"))
@@ -97,12 +106,28 @@ class LoginViewModelTest {
     }
 
     @Test
+    fun shouldRestoreSessionAutomaticallyOnInitIfPresent() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val fakeRepo = FakeAuthRepo(existingSession = UserSession("@alice:matrix.org", "DEV99", "https://matrix.org"))
+        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), RestoreSessionUseCase(fakeRepo), FakeLogger())
+
+        advanceUntilIdle()
+
+        assertTrue(fakeRepo.restoreCalled)
+        assertFalse(viewModel.uiState.value.isCheckingSession)
+
+        Dispatchers.resetMain()
+    }
+
+    @Test
     fun shouldSetErrorMessageWhenLoginFails() = runTest {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
         val fakeRepo = FakeAuthRepo(shouldFail = true)
-        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), FakeLogger())
+        val viewModel = LoginViewModel(LoginUseCase(fakeRepo), RestoreSessionUseCase(fakeRepo), FakeLogger())
 
         viewModel.sendIntent(LoginUiIntent.UsernameChanged("alice"))
         viewModel.sendIntent(LoginUiIntent.PasswordChanged("wrong"))
@@ -113,6 +138,9 @@ class LoginViewModelTest {
         assertTrue(fakeRepo.loginCalled)
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals("Usuário ou senha incorretos", viewModel.uiState.value.errorMessage)
+
+        viewModel.sendIntent(LoginUiIntent.DismissError)
+        assertNull(viewModel.uiState.value.errorMessage)
 
         Dispatchers.resetMain()
     }

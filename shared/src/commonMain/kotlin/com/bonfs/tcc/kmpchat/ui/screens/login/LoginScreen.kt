@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import com.bonfs.tcc.kmpchat.ui.components.LoadingView
 import com.bonfs.tcc.kmpchat.ui.theme.ErrorRed
 import com.bonfs.tcc.kmpchat.ui.theme.KmpChatTheme
 import com.bonfs.tcc.kmpchat.ui.theme.MidnightBackground
@@ -61,7 +62,11 @@ fun LoginScreen(
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        LoginCardContent(state = state, onIntent = onIntent)
+        if (state.isCheckingSession) {
+            LoadingView(message = "Restaurando sessão criptografada...")
+        } else {
+            LoginCardContent(state = state, onIntent = onIntent)
+        }
     }
 }
 

@@ -9,6 +9,7 @@ data class LoginUiState(
     val username: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
+    val isCheckingSession: Boolean = true,
     val errorMessage: String? = null
 ) : UiState
 
@@ -18,6 +19,7 @@ sealed interface LoginUiIntent : UiIntent {
     data class PasswordChanged(val password: String) : LoginUiIntent
     data object SubmitLogin : LoginUiIntent
     data object DismissError : LoginUiIntent
+    data object CheckExistingSession : LoginUiIntent
 }
 
 sealed interface LoginUiEffect : UiEffect {

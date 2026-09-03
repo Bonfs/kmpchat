@@ -8,13 +8,19 @@ import com.bonfs.tcc.kmpchat.core.util.Logger
 import com.bonfs.tcc.kmpchat.domain.model.LoginCredentials
 import com.bonfs.tcc.kmpchat.domain.model.MatrixAuthException
 import com.bonfs.tcc.kmpchat.domain.usecase.LoginUseCase
+import com.bonfs.tcc.kmpchat.domain.usecase.RestoreSessionUseCase
 
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,
+    private val restoreSessionUseCase: RestoreSessionUseCase,
     private val logger: Logger
 ) : BaseViewModel<LoginUiState, LoginUiIntent, LoginUiEffect>(LoginUiState()) {
 
     private val TAG = "LoginViewModel"
+
+    init {
+        checkExistingSession()
+    }
 
     override fun sendIntent(intent: LoginUiIntent) {
         when (intent) {
@@ -23,6 +29,20 @@ class LoginViewModel(
             is LoginUiIntent.PasswordChanged -> onPasswordChanged(intent.password)
             is LoginUiIntent.SubmitLogin -> onSubmitLogin()
             is LoginUiIntent.DismissError -> onDismissError()
+            is LoginUiIntent.CheckExistingSession -> checkExistingSession()
+        }
+    }
+
+    private fun checkExistingSession() {
+        viewModelScope.launch {
+            updateState { it.copy(isCheckingSession = true) }
+            val session = restoreSessionUseCase()
+            if (session != null) {
+                updateState { it.copy(isCheckingSession = false) }
+                emitEffect(LoginUiEffect.NavigateToRooms)
+            } else {
+                updateState { it.copy(isCheckingSession = false) }
+            }
         }
     }
 

@@ -23,7 +23,7 @@ import com.bonfs.tcc.kmpchat.domain.repository.ChatRepository
 
 private const val DEFAULT_TIMELINE_PAGE_SIZE = 50
 
-class MatrixChatRepositoryImpl(
+class MatrixChatRepository(
     private val clientManager: MatrixClientManager
 ) : ChatRepository {
 

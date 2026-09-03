@@ -32,6 +32,7 @@ private class FakeAuthRepository : AuthRepository {
         sessionFlow.value = null
     }
 
+    override suspend fun restoreSession(): UserSession? = sessionFlow.value
     override suspend fun getCurrentSession(): UserSession? = sessionFlow.value
     override fun observeSession(): Flow<UserSession?> = sessionFlow
     override fun observeSyncState(): Flow<SyncState> = MutableStateFlow(SyncState.RUNNING)

@@ -22,6 +22,7 @@ private class FakeLogoutRepository : AuthRepository {
         logoutCalled = true
     }
 
+    override suspend fun restoreSession(): UserSession? = null
     override suspend fun getCurrentSession(): UserSession? = null
     override fun observeSession(): Flow<UserSession?> = MutableStateFlow(null)
     override fun observeSyncState(): Flow<SyncState> = MutableStateFlow(SyncState.STOPPED)

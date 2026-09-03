@@ -20,21 +20,18 @@ import com.bonfs.tcc.kmpchat.domain.model.RoomCreationException
 import com.bonfs.tcc.kmpchat.domain.model.RoomMembership
 import com.bonfs.tcc.kmpchat.domain.repository.RoomRepository
 
-class MatrixRoomRepositoryImpl(
+class MatrixRoomRepository(
     private val clientManager: MatrixClientManager
 ) : RoomRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeRooms(): Flow<List<ChatRoom>> {
         return clientManager.clientState.flatMapLatest { client ->
-            if (client == null) {
-                flowOf(emptyList())
-            } else {
-                client.room.getAll().flattenValues().map { rooms ->
-                    rooms.map { mapTrixnityRoomToChatRoom(it) }
-                        .sortedByDescending { it.lastEventTimestamp }
-                }
+            client?.room?.getAll()?.flattenValues()?.map { rooms ->
+                rooms.map { mapTrixnityRoomToChatRoom(it) }
+                    .sortedByDescending { it.lastEventTimestamp }
             }
+                ?: flowOf(emptyList())
         }
     }
 
@@ -42,13 +39,10 @@ class MatrixRoomRepositoryImpl(
     override fun observeRoomById(roomId: String): Flow<ChatRoom?> {
         val targetRoomId = RoomId(roomId)
         return clientManager.clientState.flatMapLatest { client ->
-            if (client == null) {
-                flowOf(null)
-            } else {
-                client.room.getById(targetRoomId).map { room ->
-                    room?.let { mapTrixnityRoomToChatRoom(it) }
-                }
+            client?.room?.getById(targetRoomId)?.map { room ->
+                room?.let { mapTrixnityRoomToChatRoom(it) }
             }
+                ?: flowOf(null)
         }
     }
 
