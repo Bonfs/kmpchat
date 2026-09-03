@@ -24,8 +24,12 @@ actual class RoomDatabaseFactory actual constructor() {
         }
     }
 
-    private fun resolveDirectory(context: Context, directory: String): File {
-        val dir = if (directory.startsWith("/")) File(directory) else File(context.filesDir, directory)
+    private fun getDirectory(context: Context, directory: String): File {
+        return if (directory.startsWith("/")) File(directory) else File(context.filesDir, directory)
+    }
+
+    private fun ensureDirectoryExists(context: Context, directory: String): File {
+        val dir = getDirectory(context, directory)
         if (!dir.exists()) {
             dir.mkdirs()
         }
@@ -37,7 +41,7 @@ actual class RoomDatabaseFactory actual constructor() {
         passphrase: ByteArray
     ): RepositoriesModule {
         val context = getApplicationContext()
-        val dir = resolveDirectory(context, databaseDirectory)
+        val dir = ensureDirectoryExists(context, databaseDirectory)
         val databaseFile = File(dir, "matrix_room.db")
         val driver = SQLCipherNativeDriver(passphrase)
         val builder = Room.databaseBuilder(context, TrixnityRoomDatabase::class.java, databaseFile.absolutePath)
@@ -49,7 +53,7 @@ actual class RoomDatabaseFactory actual constructor() {
         mediaDirectory: String
     ): MediaStoreModule {
         val context = getApplicationContext()
-        val dir = resolveDirectory(context, mediaDirectory)
+        val dir = ensureDirectoryExists(context, mediaDirectory)
         return MediaStoreModule.okio(dir.absolutePath.toPath())
     }
 
@@ -58,8 +62,8 @@ actual class RoomDatabaseFactory actual constructor() {
         mediaDirectory: String
     ) {
         val context = getApplicationContext()
-        val dbDir = resolveDirectory(context, databaseDirectory)
-        val mediaDir = resolveDirectory(context, mediaDirectory)
+        val dbDir = getDirectory(context, databaseDirectory)
+        val mediaDir = getDirectory(context, mediaDirectory)
         dbDir.deleteRecursively()
         mediaDir.deleteRecursively()
     }

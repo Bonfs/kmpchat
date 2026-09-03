@@ -48,7 +48,7 @@ class MatrixClientManager(
 
         val clientResult = createClientInstance(repositories, mediaStore, cryptoDriver, authProviderData)
         val client = clientResult.getOrElse { error ->
-            if (authProviderData != null && error is IllegalArgumentException) {
+            if (authProviderData != null) {
                 recoverFromStaleSession(databaseDirectory, mediaDirectory, keyAlias, authProviderData)
             } else {
                 throw error
@@ -67,6 +67,7 @@ class MatrixClientManager(
         authData: MatrixClientAuthProviderData
     ): MatrixClient {
         databaseFactory.deleteStorage(databaseDirectory, mediaDirectory)
+        keyProvider.clearKey(keyAlias)
         val freshPassphrase = keyProvider.getOrCreatePassphrase(keyAlias)
         val freshRepos = databaseFactory.createRepositoriesModule(databaseDirectory, freshPassphrase)
         val freshMediaStore = databaseFactory.createMediaStoreModule(mediaDirectory)

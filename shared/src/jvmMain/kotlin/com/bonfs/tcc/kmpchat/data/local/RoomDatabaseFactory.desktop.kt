@@ -11,8 +11,12 @@ import java.io.File
 
 actual class RoomDatabaseFactory actual constructor() {
 
-    private fun resolveDirectory(directory: String): File {
-        val dir = File(directory)
+    private fun getDirectory(directory: String): File {
+        return File(directory)
+    }
+
+    private fun ensureDirectoryExists(directory: String): File {
+        val dir = getDirectory(directory)
         if (!dir.exists()) {
             dir.mkdirs()
         }
@@ -23,7 +27,7 @@ actual class RoomDatabaseFactory actual constructor() {
         databaseDirectory: String,
         passphrase: ByteArray
     ): RepositoriesModule {
-        val dir = resolveDirectory(databaseDirectory)
+        val dir = ensureDirectoryExists(databaseDirectory)
         val databaseFile = File(dir, "matrix_room.db")
         val driver = SQLCipherNativeDriver(passphrase)
         val builder = Room.databaseBuilder<TrixnityRoomDatabase>(databaseFile.absolutePath)
@@ -34,7 +38,7 @@ actual class RoomDatabaseFactory actual constructor() {
     actual suspend fun createMediaStoreModule(
         mediaDirectory: String
     ): MediaStoreModule {
-        val dir = resolveDirectory(mediaDirectory)
+        val dir = ensureDirectoryExists(mediaDirectory)
         return MediaStoreModule.okio(dir.absolutePath.toPath())
     }
 
@@ -42,8 +46,8 @@ actual class RoomDatabaseFactory actual constructor() {
         databaseDirectory: String,
         mediaDirectory: String
     ) {
-        val dbDir = resolveDirectory(databaseDirectory)
-        val mediaDir = resolveDirectory(mediaDirectory)
+        val dbDir = getDirectory(databaseDirectory)
+        val mediaDir = getDirectory(mediaDirectory)
         dbDir.deleteRecursively()
         mediaDir.deleteRecursively()
     }

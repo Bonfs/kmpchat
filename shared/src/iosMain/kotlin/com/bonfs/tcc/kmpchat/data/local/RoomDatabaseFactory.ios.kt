@@ -14,9 +14,13 @@ import platform.Foundation.NSUserDomainMask
 
 actual class RoomDatabaseFactory actual constructor() {
 
-    private fun resolveDirectory(directory: String): String {
+    private fun getDirectoryPath(directory: String): String {
         val root = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true).firstOrNull() as? String ?: ""
-        val target = if (directory.startsWith("/")) directory else "$root/$directory"
+        return if (directory.startsWith("/")) directory else "$root/$directory"
+    }
+
+    private fun ensureDirectoryExists(directory: String): String {
+        val target = getDirectoryPath(directory)
         val okioPath = target.toPath()
         if (!FileSystem.SYSTEM.exists(okioPath)) {
             FileSystem.SYSTEM.createDirectories(okioPath)
@@ -28,7 +32,7 @@ actual class RoomDatabaseFactory actual constructor() {
         databaseDirectory: String,
         passphrase: ByteArray
     ): RepositoriesModule {
-        val resolvedDir = resolveDirectory(databaseDirectory)
+        val resolvedDir = ensureDirectoryExists(databaseDirectory)
         val databasePath = "$resolvedDir/matrix_room.db"
         val driver = SQLCipherNativeDriver(passphrase)
         val builder = Room.databaseBuilder<TrixnityRoomDatabase>(databasePath)
@@ -39,7 +43,7 @@ actual class RoomDatabaseFactory actual constructor() {
     actual suspend fun createMediaStoreModule(
         mediaDirectory: String
     ): MediaStoreModule {
-        val resolvedDir = resolveDirectory(mediaDirectory)
+        val resolvedDir = ensureDirectoryExists(mediaDirectory)
         return MediaStoreModule.okio(resolvedDir.toPath())
     }
 
@@ -47,8 +51,8 @@ actual class RoomDatabaseFactory actual constructor() {
         databaseDirectory: String,
         mediaDirectory: String
     ) {
-        val dbDir = resolveDirectory(databaseDirectory).toPath()
-        val mediaDir = resolveDirectory(mediaDirectory).toPath()
+        val dbDir = getDirectoryPath(databaseDirectory).toPath()
+        val mediaDir = getDirectoryPath(mediaDirectory).toPath()
         try {
             if (FileSystem.SYSTEM.exists(dbDir)) FileSystem.SYSTEM.deleteRecursively(dbDir)
             if (FileSystem.SYSTEM.exists(mediaDir)) FileSystem.SYSTEM.deleteRecursively(mediaDir)
