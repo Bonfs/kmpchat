@@ -13,7 +13,7 @@ class SQLCipherNativeDriver(
 
     override fun open(fileName: String): SQLiteConnection {
         val connection = delegateDriver.open(fileName)
-//        applyPassphrase(connection, passphrase)
+        applyPassphrase(connection, passphrase)
         return connection
     }
 
