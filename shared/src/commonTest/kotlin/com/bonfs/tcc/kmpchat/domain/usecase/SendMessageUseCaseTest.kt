@@ -7,15 +7,15 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
 import com.bonfs.tcc.kmpchat.domain.model.EmptyFieldException
+import com.bonfs.tcc.kmpchat.domain.model.EventMessage
 import com.bonfs.tcc.kmpchat.domain.repository.ChatRepository
 
 private class FakeChatRepository : ChatRepository {
     var sentRoomId: String? = null
     var sentContent: String? = null
 
-    override fun observeTimeline(roomId: String): Flow<List<ChatMessage>> = MutableStateFlow(emptyList())
+    override fun observeTimeline(roomId: String): Flow<List<EventMessage>> = MutableStateFlow(emptyList())
 
     override suspend fun sendMessage(roomId: String, content: String) {
         sentRoomId = roomId

@@ -3,12 +3,12 @@ package com.bonfs.tcc.kmpchat.ui.screens.chat
 import com.bonfs.tcc.kmpchat.core.mvi.UiEffect
 import com.bonfs.tcc.kmpchat.core.mvi.UiIntent
 import com.bonfs.tcc.kmpchat.core.mvi.UiState
-import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
+import com.bonfs.tcc.kmpchat.domain.model.EventMessage
 
 data class ChatUiState(
     val roomId: String = "",
     val roomName: String = "",
-    val messages: List<ChatMessage> = emptyList(),
+    val messages: List<EventMessage> = emptyList(),
     val inputText: String = "",
     val isLoading: Boolean = false,
     val isSending: Boolean = false,

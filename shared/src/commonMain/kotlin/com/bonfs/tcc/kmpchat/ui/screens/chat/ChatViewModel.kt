@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 import com.bonfs.tcc.kmpchat.core.mvi.BaseViewModel
-import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
+import com.bonfs.tcc.kmpchat.domain.model.EventMessage
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveTimelineUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.SendMessageUseCase
 
@@ -30,8 +30,8 @@ class ChatViewModel(
         viewModelScope.launch {
             observeTimelineUseCase(roomId)
                 .catch { handleTimelineError(it) }
-                .collectLatest { messageList ->
-                    val sorted = messageList.sortedBy { it.timestamp }
+                .collectLatest { messageList: List<EventMessage> ->
+                    val sorted: List<EventMessage> = messageList.sortedBy { it.timestamp }
                     updateState { it.copy(messages = sorted, isLoading = false) }
                     emitEffect(ChatUiEffect.ScrollToBottom)
                 }

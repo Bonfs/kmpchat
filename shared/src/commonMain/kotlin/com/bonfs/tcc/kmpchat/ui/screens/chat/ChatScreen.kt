@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +41,7 @@ import androidx.compose.ui.unit.sp
 
 import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
 import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
+import com.bonfs.tcc.kmpchat.domain.model.UnknownEventMessage
 import com.bonfs.tcc.kmpchat.ui.components.ChatAvatar
 import com.bonfs.tcc.kmpchat.ui.components.EmptyView
 import com.bonfs.tcc.kmpchat.ui.components.ErrorView
@@ -77,7 +77,12 @@ fun ChatScreen(
         containerColor = MidnightBackground,
         modifier = modifier
     ) { innerPadding ->
-        ChatBody(state = state, listState = listState, padding = innerPadding)
+        ChatBody(
+            state = state,
+            listState = listState,
+            onIntent = onIntent,
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 }
 
@@ -122,12 +127,11 @@ private fun ChatTopBarTitle(roomName: String) {
 private fun ChatBody(
     state: ChatUiState,
     listState: LazyListState,
-    padding: PaddingValues
+    onIntent: (ChatUiIntent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
+        modifier = modifier.fillMaxSize()
     ) {
         when {
             state.isLoading -> LoadingView(message = "Carregando histórico...")
@@ -136,23 +140,27 @@ private fun ChatBody(
                 title = "Início da conversa criptografada",
                 subtitle = "As mensagens nesta sala são protegidas com Vodozemac E2EE."
             )
-            else -> ChatTimeline(messages = state.messages, listState = listState)
+            else -> ChatTimeline(state = state, listState = listState, onIntent = onIntent)
         }
     }
 }
 
 @Composable
 private fun ChatTimeline(
-    messages: List<ChatMessage>,
-    listState: LazyListState
+    state: ChatUiState,
+    listState: LazyListState,
+    onIntent: (ChatUiIntent) -> Unit
 ) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        items(messages, key = { it.id }) { message ->
-            MessageBubble(message = message)
+        items(state.messages, key = { it.id }) { message ->
+            when (message) {
+                is ChatMessage -> MessageBubble(message = message)
+                is UnknownEventMessage -> { /* Not rendered as only message events are displayed for now */ }
+            }
         }
     }
 }

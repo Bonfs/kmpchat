@@ -8,12 +8,16 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
+import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFDictionaryRef
+import platform.CoreFoundation.CFDictionarySetValue
+import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFBooleanTrue
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSData
+import platform.Foundation.NSString
 import platform.Foundation.create
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
@@ -39,45 +43,53 @@ private const val PASSPHRASE_LENGTH_BYTES: Int = 32
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 actual class DatabaseKeyProvider actual constructor() {
 
+    private val inMemoryFallback: MutableMap<String, ByteArray> = mutableMapOf()
+
     actual fun getOrCreatePassphrase(alias: String): ByteArray {
-        val existing = loadFromKeychain(alias)
+        val existing = loadFromKeychain(alias) ?: inMemoryFallback[alias]
         if (existing != null && existing.size == PASSPHRASE_LENGTH_BYTES) {
             return existing
         }
         val newKey = generateRandomBytes(PASSPHRASE_LENGTH_BYTES)
         saveToKeychain(alias, newKey)
+        inMemoryFallback[alias] = newKey
         return newKey
     }
 
     actual fun clearKey(alias: String) {
-        val query = mapOf<Any?, Any?>(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrService to KEYCHAIN_SERVICE,
-            kSecAttrAccount to alias
-        )
-        val cfQuery = CFBridgingRetain(query) as CFDictionaryRef
+        inMemoryFallback.remove(alias)
+        val cfQuery = CFDictionaryCreateMutable(null, 0, null, null)
+        val serviceStr = CFBridgingRetain(KEYCHAIN_SERVICE)
+        val accountStr = CFBridgingRetain(alias)
         try {
+            CFDictionarySetValue(cfQuery, kSecClass, kSecClassGenericPassword)
+            CFDictionarySetValue(cfQuery, kSecAttrService, serviceStr)
+            CFDictionarySetValue(cfQuery, kSecAttrAccount, accountStr)
             SecItemDelete(cfQuery)
         } finally {
-            CFBridgingRelease(cfQuery)
+            CFBridgingRelease(serviceStr)
+            CFBridgingRelease(accountStr)
+            CFRelease(cfQuery)
         }
     }
 
     private fun loadFromKeychain(alias: String): ByteArray? {
         memScoped {
-            val query = mapOf<Any?, Any?>(
-                kSecClass to kSecClassGenericPassword,
-                kSecAttrService to KEYCHAIN_SERVICE,
-                kSecAttrAccount to alias,
-                kSecReturnData to kCFBooleanTrue,
-                kSecMatchLimit to kSecMatchLimitOne
-            )
+            val cfQuery = CFDictionaryCreateMutable(null, 0, null, null)
+            val serviceStr = CFBridgingRetain(KEYCHAIN_SERVICE)
+            val accountStr = CFBridgingRetain(alias)
             val result = alloc<CFTypeRefVar>()
-            val cfQuery = CFBridgingRetain(query) as CFDictionaryRef
             val status = try {
+                CFDictionarySetValue(cfQuery, kSecClass, kSecClassGenericPassword)
+                CFDictionarySetValue(cfQuery, kSecAttrService, serviceStr)
+                CFDictionarySetValue(cfQuery, kSecAttrAccount, accountStr)
+                CFDictionarySetValue(cfQuery, kSecReturnData, kCFBooleanTrue)
+                CFDictionarySetValue(cfQuery, kSecMatchLimit, kSecMatchLimitOne)
                 SecItemCopyMatching(cfQuery, result.ptr)
             } finally {
-                CFBridgingRelease(cfQuery)
+                CFBridgingRelease(serviceStr)
+                CFBridgingRelease(accountStr)
+                CFRelease(cfQuery)
             }
             if (status == errSecSuccess && result.value != null) {
                 val nsData = CFBridgingRelease(result.value) as NSData
@@ -88,20 +100,24 @@ actual class DatabaseKeyProvider actual constructor() {
     }
 
     private fun saveToKeychain(alias: String, key: ByteArray) {
+        clearKey(alias)
         val nsData = byteArrayToNsData(key)
-        val query = mapOf<Any?, Any?>(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrService to KEYCHAIN_SERVICE,
-            kSecAttrAccount to alias,
-            kSecValueData to nsData,
-            kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        )
-        val cfQuery = CFBridgingRetain(query) as CFDictionaryRef
+        val cfQuery = CFDictionaryCreateMutable(null, 0, null, null)
+        val serviceStr = CFBridgingRetain(KEYCHAIN_SERVICE)
+        val accountStr = CFBridgingRetain(alias)
+        val dataRef = CFBridgingRetain(nsData)
         try {
-            SecItemDelete(cfQuery)
+            CFDictionarySetValue(cfQuery, kSecClass, kSecClassGenericPassword)
+            CFDictionarySetValue(cfQuery, kSecAttrService, serviceStr)
+            CFDictionarySetValue(cfQuery, kSecAttrAccount, accountStr)
+            CFDictionarySetValue(cfQuery, kSecValueData, dataRef)
+            CFDictionarySetValue(cfQuery, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
             SecItemAdd(cfQuery, null)
         } finally {
-            CFBridgingRelease(cfQuery)
+            CFBridgingRelease(serviceStr)
+            CFBridgingRelease(accountStr)
+            CFBridgingRelease(dataRef)
+            CFRelease(cfQuery)
         }
     }
 

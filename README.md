@@ -30,7 +30,7 @@ KmpChat é uma Prova de Conceito (PoC) de um cliente de mensagens instantâneas 
 * **Criação de Conversas Diretas (DMs):** Modal para iniciar novas conversas diretas individuais a partir do Matrix ID do destinatário (`@usuario:servidor`).
 
 ### 6. Timeline do Chat & Envio de Mensagens
-* **Linha do Tempo em Tempo Real:** Renderização cronológica de mensagens com paginação e auto-scroll ao receber novas mensagens.
+* **Linha do Tempo em Tempo Real Polimórfica:** Observação e listagem completa dos eventos de sala através da hierarquia `EventMessage` (`ChatMessage` e `UnkownEventMessage`), com auto-scroll ordenado cronologicamente.
 * **Balões Direcionais:** Balões de conversa distintos para mensagens enviadas (Midnight Cobalt) e recebidas (Midnight Surface) com timestamps formatados.
 * **Envio Criptografado:** Despacho de mensagens de texto simples criptografadas de ponta a ponta.
 

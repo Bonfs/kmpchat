@@ -14,7 +14,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 
 import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
+import com.bonfs.tcc.kmpchat.domain.model.EventMessage
 import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
+import com.bonfs.tcc.kmpchat.domain.model.UnknownEventMessage
 import com.bonfs.tcc.kmpchat.domain.repository.ChatRepository
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveTimelineUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.SendMessageUseCase
@@ -23,10 +25,10 @@ import com.bonfs.tcc.kmpchat.domain.usecase.SendMessageUseCase
 class ChatViewModelTest {
 
     private class FakeChatRepo : ChatRepository {
-        val timelineFlow = MutableStateFlow<List<ChatMessage>>(emptyList())
+        val timelineFlow: MutableStateFlow<List<EventMessage>> = MutableStateFlow<List<EventMessage>>(emptyList())
         var lastSentMessage: Pair<String, String>? = null
 
-        override fun observeTimeline(roomId: String): Flow<List<ChatMessage>> = timelineFlow
+        override fun observeTimeline(roomId: String): Flow<List<EventMessage>> = timelineFlow
 
         override suspend fun sendMessage(roomId: String, content: String) {
             lastSentMessage = roomId to content
@@ -38,12 +40,12 @@ class ChatViewModelTest {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        val chatRepo = FakeChatRepo()
-        val msg1 = ChatMessage(id = "m1", roomId = "!r1", senderId = "@a:matrix.org", senderName = "A", content = "Oi", timestamp = 200L, isOutgoing = false, isEncrypted = true, deliveryStatus = MessageDeliveryStatus.RECEIVED)
-        val msg2 = ChatMessage(id = "m2", roomId = "!r1", senderId = "@b:matrix.org", senderName = "B", content = "Tudo bem?", timestamp = 100L, isOutgoing = true, isEncrypted = true, deliveryStatus = MessageDeliveryStatus.SENT)
+        val chatRepo: FakeChatRepo = FakeChatRepo()
+        val msg1: ChatMessage = ChatMessage(id = "m1", roomId = "!r1", senderId = "@a:matrix.org", senderName = "A", content = "Oi", timestamp = 200L, isOutgoing = false, isEncrypted = true, deliveryStatus = MessageDeliveryStatus.RECEIVED)
+        val msg2: UnknownEventMessage = UnknownEventMessage(id = "m2", roomId = "!r1", senderId = "@b:matrix.org", senderName = "B", rawType = "RoomMemberEventContent", timestamp = 100L, isOutgoing = true, isEncrypted = true, deliveryStatus = MessageDeliveryStatus.SENT)
         chatRepo.timelineFlow.value = listOf(msg1, msg2)
 
-        val viewModel = ChatViewModel(
+        val viewModel: ChatViewModel = ChatViewModel(
             ObserveTimelineUseCase(chatRepo),
             SendMessageUseCase(chatRepo)
         )
@@ -65,8 +67,8 @@ class ChatViewModelTest {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        val chatRepo = FakeChatRepo()
-        val viewModel = ChatViewModel(
+        val chatRepo: FakeChatRepo = FakeChatRepo()
+        val viewModel: ChatViewModel = ChatViewModel(
             ObserveTimelineUseCase(chatRepo),
             SendMessageUseCase(chatRepo)
         )
