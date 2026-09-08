@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.sp
 
 import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
 import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
-import com.bonfs.tcc.kmpchat.domain.model.UnknownEventMessage
 import com.bonfs.tcc.kmpchat.ui.components.ChatAvatar
 import com.bonfs.tcc.kmpchat.ui.components.EmptyView
 import com.bonfs.tcc.kmpchat.ui.components.ErrorView
@@ -157,10 +156,7 @@ private fun ChatTimeline(
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
         items(state.messages, key = { it.id }) { message ->
-            when (message) {
-                is ChatMessage -> MessageBubble(message = message)
-                is UnknownEventMessage -> { /* Not rendered as only message events are displayed for now */ }
-            }
+            MessageBubble(message = message)
         }
     }
 }

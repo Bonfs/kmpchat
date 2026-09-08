@@ -17,13 +17,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
+import com.bonfs.tcc.kmpchat.domain.model.EventMessage
 import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
+import com.bonfs.tcc.kmpchat.domain.model.UnknownEventMessage
 import com.bonfs.tcc.kmpchat.ui.theme.ErrorRed
 import com.bonfs.tcc.kmpchat.ui.theme.KmpChatTheme
 import com.bonfs.tcc.kmpchat.ui.theme.MidnightBubbleIncoming
@@ -35,7 +38,7 @@ import com.bonfs.tcc.kmpchat.ui.theme.MidnightTextSecondary
 
 @Composable
 fun MessageBubble(
-    message: ChatMessage,
+    message: EventMessage,
     modifier: Modifier = Modifier
 ) {
     val alignment = if (message.isOutgoing) Alignment.CenterEnd else Alignment.CenterStart
@@ -51,9 +54,10 @@ fun MessageBubble(
 }
 
 @Composable
-private fun MessageBubbleContent(message: ChatMessage) {
+private fun MessageBubbleContent(message: EventMessage) {
     val bubbleColor = if (message.isOutgoing) MidnightBubbleOutgoing else MidnightBubbleIncoming
     val shape = resolveBubbleShape(message.isOutgoing)
+    val senderName: String? = message.senderName
 
     Column(
         modifier = Modifier
@@ -62,10 +66,13 @@ private fun MessageBubbleContent(message: ChatMessage) {
             .background(bubbleColor)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        if (!message.isOutgoing && message.senderName != null) {
-            SenderHeader(message.senderName)
+        if (!message.isOutgoing && senderName != null) {
+            SenderHeader(senderName)
         }
-        MessageBodyText(message.content)
+        when (message) {
+            is ChatMessage -> MessageBodyText(message.content)
+            is UnknownEventMessage -> UnsupportedEventBodyText()
+        }
         MessageFooter(message)
     }
 }
@@ -91,7 +98,18 @@ private fun MessageBodyText(content: String) {
 }
 
 @Composable
-private fun MessageFooter(message: ChatMessage) {
+private fun UnsupportedEventBodyText() {
+    Text(
+        text = "Evento não suportado",
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontStyle = FontStyle.Italic
+        ),
+        color = MidnightTextSecondary
+    )
+}
+
+@Composable
+private fun MessageFooter(message: EventMessage) {
     val formattedTime = formatTimestamp(message.timestamp)
 
     Row(
@@ -214,6 +232,19 @@ private fun MessageBubblePreview() {
                     isOutgoing = true,
                     isEncrypted = true,
                     deliveryStatus = MessageDeliveryStatus.SENDING
+                )
+            )
+            MessageBubble(
+                message = UnknownEventMessage(
+                    id = "4",
+                    roomId = "!room:matrix.org",
+                    senderId = "@alice:matrix.org",
+                    senderName = "Alice",
+                    rawType = "m.image",
+                    timestamp = 1725148980000L,
+                    isOutgoing = false,
+                    isEncrypted = true,
+                    deliveryStatus = MessageDeliveryStatus.RECEIVED
                 )
             )
         }
