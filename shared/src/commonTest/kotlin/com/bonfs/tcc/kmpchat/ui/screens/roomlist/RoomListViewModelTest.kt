@@ -26,6 +26,7 @@ import com.bonfs.tcc.kmpchat.domain.usecase.CreateDirectRoomUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.HandleInviteUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.LogoutUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveRoomsUseCase
+import com.bonfs.tcc.kmpchat.domain.usecase.ObserveSyncStateUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RoomListViewModelTest {
@@ -48,10 +49,12 @@ class RoomListViewModelTest {
 
     private class FakeAuthRepo : AuthRepository {
         var logoutCalled = false
+        val syncFlow = MutableStateFlow(SyncState.STOPPED)
+
         override fun observeSession(): Flow<UserSession?> = flowOf(null)
         override suspend fun restoreSession(): UserSession? = null
         override suspend fun getCurrentSession(): UserSession? = null
-        override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.STOPPED)
+        override fun observeSyncState(): Flow<SyncState> = syncFlow
         override suspend fun login(credentials: LoginCredentials): UserSession = throw UnsupportedOperationException()
         override suspend fun logout() { logoutCalled = true }
     }
@@ -68,13 +71,7 @@ class RoomListViewModelTest {
         val invitedRoom = ChatRoom(id = "!r2", name = "Convite 1", lastMessage = null, lastEventTimestamp = 0L, unreadCount = 0, isDirect = true, isEncrypted = true, membership = RoomMembership.INVITE)
         roomRepo.roomsFlow.value = listOf(joinedRoom, invitedRoom)
 
-        val viewModel = RoomListViewModel(
-            ObserveRoomsUseCase(roomRepo),
-            CreateDirectRoomUseCase(roomRepo),
-            HandleInviteUseCase(roomRepo),
-            LogoutUseCase(authRepo)
-        )
-
+        val viewModel = createViewModel(roomRepo, authRepo)
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -94,12 +91,7 @@ class RoomListViewModelTest {
         val roomRepo = FakeRoomRepo()
         val authRepo = FakeAuthRepo()
 
-        val viewModel = RoomListViewModel(
-            ObserveRoomsUseCase(roomRepo),
-            CreateDirectRoomUseCase(roomRepo),
-            HandleInviteUseCase(roomRepo),
-            LogoutUseCase(authRepo)
-        )
+        val viewModel = createViewModel(roomRepo, authRepo)
 
         viewModel.sendIntent(RoomListUiIntent.OpenNewChatDialog)
         assertTrue(viewModel.uiState.value.showNewChatDialog)
@@ -114,5 +106,37 @@ class RoomListViewModelTest {
         assertFalse(viewModel.uiState.value.isCreatingRoom)
 
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun shouldUpdateInitialSyncStateWhenSyncStateChanges() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val roomRepo = FakeRoomRepo()
+        val authRepo = FakeAuthRepo()
+        authRepo.syncFlow.value = SyncState.INITIAL_SYNC
+
+        val viewModel = createViewModel(roomRepo, authRepo)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isInitialSyncing)
+
+        authRepo.syncFlow.value = SyncState.RUNNING
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isInitialSyncing)
+
+        Dispatchers.resetMain()
+    }
+
+    private fun createViewModel(roomRepo: FakeRoomRepo, authRepo: FakeAuthRepo): RoomListViewModel {
+        return RoomListViewModel(
+            observeRoomsUseCase = ObserveRoomsUseCase(roomRepo),
+            createDirectRoomUseCase = CreateDirectRoomUseCase(roomRepo),
+            handleInviteUseCase = HandleInviteUseCase(roomRepo),
+            logoutUseCase = LogoutUseCase(authRepo),
+            observeSyncStateUseCase = ObserveSyncStateUseCase(authRepo)
+        )
     }
 }

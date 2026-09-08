@@ -127,7 +127,7 @@ private fun RoomListBody(
             .padding(padding)
     ) {
         when {
-            state.isLoading -> LoadingView(message = "Sincronizando conversas...")
+            state.isLoading || state.isInitialSyncing -> LoadingView(message = "Sincronizando conversas...")
             state.errorMessage != null -> ErrorView(
                 message = state.errorMessage,
                 onRetry = { onIntent(RoomListUiIntent.LoadRooms) }

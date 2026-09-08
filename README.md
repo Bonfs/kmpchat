@@ -26,6 +26,7 @@ KmpChat é uma Prova de Conceito (PoC) de um cliente de mensagens instantâneas 
 
 ### 5. Lista de Conversas & Gestão de Convites
 * **Listagem Reativa de Salas:** Observação em tempo real do estado de sincronização e fluxo de conversas ativas.
+* **Sincronização Inicial com Loading State:** Exibição de indicador visual de carregamento durante a sincronização inicial das conversas do Matrix logo após o login.
 * **Central de Convites:** Seção destacada para aceitar (`join`) ou recusar/ignorar (`leave`) convites recebidos para novas salas.
 * **Criação de Conversas Diretas (DMs):** Modal para iniciar novas conversas diretas individuais a partir do Matrix ID do destinatário (`@usuario:servidor`).
 

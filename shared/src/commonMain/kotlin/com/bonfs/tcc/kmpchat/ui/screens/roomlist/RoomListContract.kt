@@ -9,6 +9,7 @@ data class RoomListUiState(
     val rooms: List<ChatRoom> = emptyList(),
     val invites: List<ChatRoom> = emptyList(),
     val isLoading: Boolean = false,
+    val isInitialSyncing: Boolean = false,
     val isCreatingRoom: Boolean = false,
     val errorMessage: String? = null,
     val showNewChatDialog: Boolean = false,

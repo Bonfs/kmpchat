@@ -13,16 +13,20 @@ import com.bonfs.tcc.kmpchat.domain.usecase.CreateDirectRoomUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.HandleInviteUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.LogoutUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveRoomsUseCase
+import com.bonfs.tcc.kmpchat.domain.usecase.ObserveSyncStateUseCase
+import de.connect2x.trixnity.clientserverapi.client.SyncState
 
 class RoomListViewModel(
     private val observeRoomsUseCase: ObserveRoomsUseCase,
     private val createDirectRoomUseCase: CreateDirectRoomUseCase,
     private val handleInviteUseCase: HandleInviteUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val observeSyncStateUseCase: ObserveSyncStateUseCase
 ) : BaseViewModel<RoomListUiState, RoomListUiIntent, RoomListUiEffect>(RoomListUiState(isLoading = true)) {
 
     init {
         observeRoomsStream()
+        observeSyncStateStream()
     }
 
     override fun sendIntent(intent: RoomListUiIntent) {
@@ -47,6 +51,17 @@ class RoomListViewModel(
                     val (invites, active) = partitionRooms(roomList)
                     updateState {
                         it.copy(rooms = active, invites = invites, isLoading = false, errorMessage = null)
+                    }
+                }
+        }
+    }
+
+    private fun observeSyncStateStream() {
+        viewModelScope.launch {
+            observeSyncStateUseCase()
+                .collectLatest { syncState ->
+                    updateState {
+                        it.copy(isInitialSyncing = syncState == SyncState.INITIAL_SYNC)
                     }
                 }
         }

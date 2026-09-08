@@ -21,6 +21,7 @@ import com.bonfs.tcc.kmpchat.domain.usecase.HandleInviteUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.LoginUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.LogoutUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveRoomsUseCase
+import com.bonfs.tcc.kmpchat.domain.usecase.ObserveSyncStateUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.ObserveTimelineUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.RestoreSessionUseCase
 import com.bonfs.tcc.kmpchat.domain.usecase.SendMessageUseCase
@@ -37,6 +38,7 @@ val domainModule: Module = module {
     factory { LogoutUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }
     factory { ObserveRoomsUseCase(get()) }
+    factory { ObserveSyncStateUseCase(get()) }
     factory { CreateDirectRoomUseCase(get()) }
     factory { HandleInviteUseCase(get()) }
     factory { ObserveTimelineUseCase(get()) }
@@ -54,7 +56,7 @@ val dataModule: Module = module {
 
 val viewModelsModule: Module = module {
     factory { LoginViewModel(get(), get(), get()) }
-    factory { RoomListViewModel(get(), get(), get(), get()) }
+    factory { RoomListViewModel(get(), get(), get(), get(), get()) }
     factory { ChatViewModel(get(), get()) }
 }
 
