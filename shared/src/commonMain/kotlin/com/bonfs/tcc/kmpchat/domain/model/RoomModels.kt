@@ -10,13 +10,20 @@ enum class RoomMembership {
 data class ChatRoom(
     val id: String,
     val name: String,
-    val lastMessage: String?,
+    val lastEvent: EventMessage? = null,
     val lastEventTimestamp: Long,
     val unreadCount: Int,
     val isDirect: Boolean,
     val isEncrypted: Boolean,
     val membership: RoomMembership
-)
+) {
+    val lastMessage: String?
+        get() = when (val event = lastEvent) {
+            is ChatMessage -> event.content
+            is UnknownEventMessage -> "Evento não suportado"
+            null -> null
+        }
+}
 
 enum class MessageDeliveryStatus {
     SENDING,

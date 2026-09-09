@@ -67,8 +67,8 @@ class RoomListViewModelTest {
         val roomRepo = FakeRoomRepo()
         val authRepo = FakeAuthRepo()
 
-        val joinedRoom = ChatRoom(id = "!r1", name = "Sala 1", lastMessage = null, lastEventTimestamp = 0L, unreadCount = 0, isDirect = false, isEncrypted = true, membership = RoomMembership.JOIN)
-        val invitedRoom = ChatRoom(id = "!r2", name = "Convite 1", lastMessage = null, lastEventTimestamp = 0L, unreadCount = 0, isDirect = true, isEncrypted = true, membership = RoomMembership.INVITE)
+        val joinedRoom = ChatRoom(id = "!r1", name = "Sala 1", lastEvent = null, lastEventTimestamp = 0L, unreadCount = 0, isDirect = false, isEncrypted = true, membership = RoomMembership.JOIN)
+        val invitedRoom = ChatRoom(id = "!r2", name = "Convite 1", lastEvent = null, lastEventTimestamp = 0L, unreadCount = 0, isDirect = true, isEncrypted = true, membership = RoomMembership.INVITE)
         roomRepo.roomsFlow.value = listOf(joinedRoom, invitedRoom)
 
         val viewModel = createViewModel(roomRepo, authRepo)

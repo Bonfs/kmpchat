@@ -7,7 +7,9 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
 import com.bonfs.tcc.kmpchat.domain.model.ChatRoom
+import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
 import com.bonfs.tcc.kmpchat.domain.model.RoomMembership
 import com.bonfs.tcc.kmpchat.domain.repository.RoomRepository
 
@@ -17,7 +19,17 @@ private class FakeObserveRoomRepository : RoomRepository {
             ChatRoom(
                 id = "!room1:matrix.org",
                 name = "General",
-                lastMessage = "Hello",
+                lastEvent = ChatMessage(
+                    id = "$1",
+                    roomId = "!room1:matrix.org",
+                    senderId = "@user:matrix.org",
+                    senderName = "User",
+                    content = "Hello",
+                    timestamp = 1000L,
+                    isOutgoing = false,
+                    isEncrypted = true,
+                    deliveryStatus = MessageDeliveryStatus.SENT
+                ),
                 lastEventTimestamp = 1000L,
                 unreadCount = 2,
                 isDirect = false,

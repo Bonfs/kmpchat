@@ -43,7 +43,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
 import com.bonfs.tcc.kmpchat.domain.model.ChatRoom
+import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
 import com.bonfs.tcc.kmpchat.domain.model.RoomMembership
 import com.bonfs.tcc.kmpchat.ui.components.EmptyView
 import com.bonfs.tcc.kmpchat.ui.components.ErrorView
@@ -295,7 +297,17 @@ private fun RoomListScreenPreview() {
                     ChatRoom(
                         id = "!dm1:matrix.org",
                         name = "Alice Silva",
-                        lastMessage = "Criptografia E2EE ativa!",
+                        lastEvent = ChatMessage(
+                            id = "$1",
+                            roomId = "!dm1:matrix.org",
+                            senderId = "@alice:matrix.org",
+                            senderName = "Alice",
+                            content = "Criptografia E2EE ativa!",
+                            timestamp = 1725148800000L,
+                            isOutgoing = false,
+                            isEncrypted = true,
+                            deliveryStatus = MessageDeliveryStatus.SENT
+                        ),
                         lastEventTimestamp = 1725148800000L,
                         unreadCount = 2,
                         isDirect = true,

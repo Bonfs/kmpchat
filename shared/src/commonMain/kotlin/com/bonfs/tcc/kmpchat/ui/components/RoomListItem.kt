@@ -26,8 +26,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import com.bonfs.tcc.kmpchat.domain.model.ChatMessage
 import com.bonfs.tcc.kmpchat.domain.model.ChatRoom
+import com.bonfs.tcc.kmpchat.domain.model.EventMessage
+import com.bonfs.tcc.kmpchat.domain.model.MessageDeliveryStatus
 import com.bonfs.tcc.kmpchat.domain.model.RoomMembership
+import com.bonfs.tcc.kmpchat.domain.model.UnknownEventMessage
 import com.bonfs.tcc.kmpchat.ui.theme.KmpChatTheme
 import com.bonfs.tcc.kmpchat.ui.theme.MidnightE2EE
 import com.bonfs.tcc.kmpchat.ui.theme.MidnightSecondary
@@ -137,8 +141,15 @@ private fun UnreadCounterBadge(count: Int) {
 private fun resolveSubtitle(room: ChatRoom): Pair<String, Color> {
     return when {
         room.membership == RoomMembership.INVITE -> "Convite recebido" to WarningOrange
-        room.lastMessage != null -> room.lastMessage to MidnightTextSecondary
+        room.lastEvent != null -> resolveEventSubtitle(room.lastEvent)
         else -> "Nenhuma mensagem ainda" to MidnightTextSecondary.copy(alpha = 0.6f)
+    }
+}
+
+private fun resolveEventSubtitle(event: EventMessage): Pair<String, Color> {
+    return when (event) {
+        is ChatMessage -> event.content to MidnightTextSecondary
+        is UnknownEventMessage -> "Evento não suportado" to MidnightTextSecondary
     }
 }
 
@@ -166,7 +177,17 @@ private fun RoomListItemPreview() {
                 room = ChatRoom(
                     id = "!general:matrix.org",
                     name = "Equipe TCC Matrix",
-                    lastMessage = "Criptografia ponta a ponta configurada!",
+                    lastEvent = ChatMessage(
+                        id = "$1",
+                        roomId = "!general:matrix.org",
+                        senderId = "@alice:matrix.org",
+                        senderName = "Alice",
+                        content = "Criptografia ponta a ponta configurada!",
+                        timestamp = 1725148800000L,
+                        isOutgoing = false,
+                        isEncrypted = true,
+                        deliveryStatus = MessageDeliveryStatus.SENT
+                    ),
                     lastEventTimestamp = 1725148800000L,
                     unreadCount = 3,
                     isDirect = false,
@@ -179,7 +200,7 @@ private fun RoomListItemPreview() {
                 room = ChatRoom(
                     id = "!alice:matrix.org",
                     name = "Alice Silva",
-                    lastMessage = null,
+                    lastEvent = null,
                     lastEventTimestamp = 1725148860000L,
                     unreadCount = 0,
                     isDirect = true,
