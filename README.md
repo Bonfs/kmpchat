@@ -1,6 +1,6 @@
 # KmpChat — Cliente Matrix Multiplataforma Seguro
 
-KmpChat é uma Prova de Conceito (PoC) de um cliente de mensagens instantâneas descentralizado e seguro baseado no protocolo **Matrix**, construído com **Kotlin Multiplatform (KMP)**, **Compose Multiplatform** e **Trixnity SDK**.
+KmpChat é um Trabalho de Conclusão de curso que implementa de um cliente de mensagens instantâneas descentralizado e seguro baseado no protocolo **Matrix**, construído com **Kotlin Multiplatform (KMP)**, **Compose Multiplatform** e **Trixnity SDK**.
 
 ---
 
